@@ -23,6 +23,14 @@ form {
   text-align: center;
 }
 
+.image {
+  height: 20rem;
+}
+
+.image img {
+  height: 100%;
+}
+
 .main-header {
   width: 100%;
   height: 3.5rem;
@@ -200,6 +208,16 @@ form {
 .btn:hover,
 .btn:active {
   background-color: #00695c;
+  color: white;
+}
+
+.danger {
+  color: red
+}
+
+.danger:hover,
+.danger:active {
+  background-color: red;
   color: white;
 }
 
