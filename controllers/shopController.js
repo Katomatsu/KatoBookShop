@@ -1,8 +1,9 @@
-const Product = require('../models/productModel');
+import Product from '../models/productModel.js';
+import Order from '../models/orderModel.js'
 
-exports.getIndex = async (req, res, next) => {
+export const getIndex = async (req, res, next) => {
 	try {
-		const products = await Product.fetchAll();
+		const products = await Product.find();
 		res.render('shop/index', {
 			pageTitle: 'All Products',
 			products: products,
@@ -13,9 +14,9 @@ exports.getIndex = async (req, res, next) => {
 	}
 };
 
-exports.getProducts = async (req, res, next) => {
+export const getProducts = async (req, res, next) => {
 	try {
-		const products = await Product.fetchAll();
+		const products = await Product.find();
 		res.render('shop/productsList', {
 			pageTitle: 'All Products',
 			products: products,
@@ -26,7 +27,7 @@ exports.getProducts = async (req, res, next) => {
 	}
 };
 
-exports.getProduct = async (req, res, next) => {
+export const getProduct = async (req, res, next) => {
 	try {
 		const prodId = req.params.productId;
 		const product = await Product.findById(prodId);
@@ -40,9 +41,10 @@ exports.getProduct = async (req, res, next) => {
 	}
 };
 
-exports.getCart = async (req, res, next) => {
+export const getCart = async (req, res, next) => {
 	try {
-		const products = await req.user.fetchCart();
+		const user = await req.user.populate('cart.items.productId');
+    const products = user.cart.items
 		res.render('shop/cart', {
 			pageTitle: 'Your Cart',
 			path: '/cart',
@@ -54,7 +56,7 @@ exports.getCart = async (req, res, next) => {
 	}
 };
 
-exports.postCart = async (req, res, next) => {
+export const postCart = async (req, res, next) => {
 	try {
 		const prodId = req.body.productId;
 
@@ -66,7 +68,7 @@ exports.postCart = async (req, res, next) => {
 	}
 };
 
-exports.postDeleteCart = async (req, res, next) => {
+export const postDeleteCart = async (req, res, next) => {
 	try {
 		const prodId = req.body.productId;
 		await req.user.deleteCartItem(prodId);
@@ -76,9 +78,10 @@ exports.postDeleteCart = async (req, res, next) => {
 	}
 };
 
-exports.getOrders = async (req, res, next) => {
+export const getOrders = async (req, res, next) => {
 	try {
-		const orders = await req.user.fetchOrders();
+		const orders = await Order.find({'user.userId': req.user._id})
+    console.log(orders);
 		res.render('shop/orders', {
 			pageTitle: 'Your Orders',
 			path: '/orders',
@@ -89,9 +92,21 @@ exports.getOrders = async (req, res, next) => {
 	}
 };
 
-exports.postOrder = async (req, res, next) => {
+export const postOrder = async (req, res, next) => {
 	try {
-		await req.user.addOrder();
+    const user = await req.user.populate('cart.items.productId');
+    const products = user.cart.items.map(prod => {
+      return {product: {...prod.productId._doc}, quantity: prod.quantity}
+    })
+    const order = new Order({
+      products,
+      user: {
+        name: req.user.name,
+        userId: req.user
+      }
+    })
+    await order.save()
+    await req.user.clearCart()
 		res.redirect('/orders');
 	} catch (error) {
 		console.log(error);

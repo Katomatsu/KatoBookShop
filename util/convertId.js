@@ -1,7 +1,7 @@
-const { ObjectId } = require("mongodb");
+import { ObjectId } from "mongodb";
 
 const convertToObjectId = id => {
 	return new ObjectId(`${id}`);
 };
 
-module.exports = convertToObjectId
+export default convertToObjectId
