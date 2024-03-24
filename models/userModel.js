@@ -1,5 +1,4 @@
 import { Schema, model } from 'mongoose';
-import Product from './productModel.js';
 
 const userSchema = new Schema({
 	name: {

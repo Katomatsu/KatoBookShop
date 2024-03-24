@@ -4,7 +4,8 @@ export const getAddProduct = (req, res, next) => {
 	res.render('admin/editProduct', {
 		pageTitle: 'Add Product',
 		path: '/admin/add-product',
-		editing: false
+		editing: false,
+		isAuthenticated: req.session.isLoggedIn
 	});
 };
 
@@ -39,7 +40,8 @@ export const getEditProduct = async (req, res, next) => {
 			pageTitle: 'Edit Product',
 			path: '/admin/edit-product',
 			editing: editMode,
-			product: product
+			product: product,
+			isAuthenticated: req.session.isLoggedIn
 		});
 	} catch (error) {
 		console.log(error);
@@ -70,11 +72,12 @@ export const getAdminProducts = async (req, res, next) => {
 	try {
 		// you can also use useful methods after 'find': Product.find().select('title price -_id').populate('userId', 'name')
 		const products = await Product.find();
-		console.log(products);
+		// console.log(products);
 		res.render('admin/adminProducts', {
 			pageTitle: 'Admin Products',
 			path: '/admin/products',
-			products
+			products,
+			isAuthenticated: req.session.isLoggedIn
 		});
 	} catch (error) {
 		console.log(error);
@@ -94,3 +97,4 @@ export const postDeleteProduct = async (req, res, next) => {
 		console.log(error);
 	}
 };
+
