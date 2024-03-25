@@ -1,5 +1,18 @@
 import User from '../models/userModel.js';
 import bcryptjs from 'bcryptjs';
+import nodemailer from 'nodemailer';
+import {config} from 'dotenv'
+
+config()
+
+const transporter = nodemailer.createTransport({
+	service: 'gmail',
+	auth: {
+		user: 'adogairbekov@gmail.com',
+		pass: process.env.EMAIL_PASSWORD
+	}
+});
+
 
 export const getLogin = (req, res, next) => {
 	let message = req.flash('error');
@@ -25,7 +38,7 @@ export const getSignup = (req, res, next) => {
 	res.render('auth/signup', {
 		pageTitle: 'Sign Up',
 		path: '/signup',
-    errorMessage: message
+		errorMessage: message
 	});
 };
 
@@ -70,10 +83,16 @@ export const postSignup = async (req, res, next) => {
 				cart: { items: [] }
 			});
 			await user.save();
-			return res.redirect('/login');
+      res.redirect('/login');
+			return await transporter.sendMail({
+				to: email,
+				from: 'KatoMarket@kato.com',
+				subject: 'Sign up succeeded!',
+				html: `<h1>Hello ${name}. You successfully signed up!</h1>`
+			});
 		}
 		req.flash('error', 'Please ensure that the entered data is valid.');
-    res.redirect('/signup')
+		res.redirect('/signup');
 	} catch (error) {
 		console.log(error);
 	}
