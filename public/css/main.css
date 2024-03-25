@@ -116,6 +116,23 @@ form {
   padding: 0.5rem 2rem;
 }
 
+.mobile-nav__item button {
+  text-decoration: none;
+  color: black;
+  font-size: 1.5rem;
+  padding: 0.5rem 2rem;
+  background-color: transparent;
+  border: none;
+  text-align: left;
+  padding: 0.5rem 2rem;
+}
+
+.mobile-nav__item button:hover  {
+  background: #00695c;
+  color: white;
+  border-radius: 3px;
+}
+
 .mobile-nav__item a:active,
 .mobile-nav__item a:hover,
 .mobile-nav__item a.active {
@@ -225,6 +242,23 @@ form {
   color: white;
 }
 
+
+.user-message {
+  margin: auto;
+  width: 90%;
+  border: 1px solid blue;
+  padding: 0.5rem;
+  border-radius: 3px;
+  background: #8ea8fd;
+  text-align: center;
+}
+
+.user-message--error {
+  border-color: red;
+  background: rgb(230, 139, 139); 
+  color: red
+}
+
 @media (min-width: 768px) {
   .main-header__nav {
     display: flex;
@@ -232,5 +266,9 @@ form {
 
   #side-menu-toggle {
     display: none;
+  }
+
+  .user-message {
+    width: 30rem;
   }
 }

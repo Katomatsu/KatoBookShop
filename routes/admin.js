@@ -5,17 +5,17 @@ import {
 	getAdminProducts,
 	getEditProduct,
 	postEditProduct,
-	postDeleteProduct,
+	postDeleteProduct
 } from '../controllers/adminController.js';
-
+import isAuth from '../middleware/isAuth.js';
 const adminRouter = express.Router();
 
 // admin/add-product => GET
-adminRouter.get('/add-product', getAddProduct);
-adminRouter.get('/products', getAdminProducts);
-adminRouter.get('/edit-product/:productId', getEditProduct);
-adminRouter.post('/edit-product', postEditProduct);
-adminRouter.post('/add-product', postAddProduct);
-adminRouter.post('/delete-product', postDeleteProduct);
+adminRouter.get('/add-product', isAuth, getAddProduct);
+adminRouter.get('/products', isAuth, getAdminProducts);
+adminRouter.get('/edit-product/:productId', isAuth, getEditProduct);
+adminRouter.post('/edit-product', isAuth, postEditProduct);
+adminRouter.post('/add-product', isAuth, postAddProduct);
+adminRouter.post('/delete-product', isAuth, postDeleteProduct);
 
 export default adminRouter;

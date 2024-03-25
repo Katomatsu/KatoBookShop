@@ -1,5 +1,5 @@
 import Product from '../models/productModel.js';
-import Order from '../models/orderModel.js';
+import Order from '../models/orderModel.js'; 
 
 export const getIndex = async (req, res, next) => {
 	try {
@@ -7,8 +7,7 @@ export const getIndex = async (req, res, next) => {
 		res.render('shop/index', {
 			pageTitle: 'All Products',
 			products: products,
-			path: '/',
-			isAuthenticated: req.session.isLoggedIn
+			path: '/'
 		});
 	} catch (error) {
 		console.log(error);
@@ -21,8 +20,7 @@ export const getProducts = async (req, res, next) => {
 		res.render('shop/productsList', {
 			pageTitle: 'All Products',
 			products: products,
-			path: '/',
-			isAuthenticated: req.session.isLoggedIn
+			path: '/'
 		});
 	} catch (error) {
 		console.log(error);
@@ -36,8 +34,7 @@ export const getProduct = async (req, res, next) => {
 		res.render('shop/productDetails', {
 			pageTitle: product.title,
 			path: '/products',
-			product: product,
-			isAuthenticated: req.session.isLoggedIn
+			product: product
 		});
 	} catch (error) {
 		console.log(error);
@@ -46,15 +43,13 @@ export const getProduct = async (req, res, next) => {
 
 export const getCart = async (req, res, next) => {
 	try {
-    const user = await req.user.populate('cart.items.productId')
+		const user = await req.user.populate('cart.items.productId');
 		const products = user.cart.items;
-    // console.log(products);
+		// console.log(products);
 		res.render('shop/cart', {
 			pageTitle: 'Your Cart',
 			path: '/cart',
 			products: products,
-			isAuthenticated: req.session.isLoggedIn,
-
 			totalPrice: 0 /* cart.totalPrice */
 		});
 	} catch (error) {
@@ -90,8 +85,7 @@ export const getOrders = async (req, res, next) => {
 		res.render('shop/orders', {
 			pageTitle: 'Your Orders',
 			path: '/orders',
-			orders: orders,
-			isAuthenticated: req.session.isLoggedIn
+			orders: orders
 		});
 	} catch (error) {
 		console.log(error);
@@ -111,6 +105,7 @@ export const postOrder = async (req, res, next) => {
 			products,
 			user: {
 				name: req.user.name,
+        email: req.user.email,
 				userId: req.user
 			}
 		});
