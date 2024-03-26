@@ -4,6 +4,8 @@ import session from 'express-session';
 import ConnectMongoDBSession from 'connect-mongodb-session';
 import { csrfSync } from 'csrf-sync';
 import flash from 'connect-flash'
+import { config } from 'dotenv';
+config();
 
 import get404 from './controllers/errorController.js';
 import adminRoutes from './routes/admin.js';
@@ -12,7 +14,7 @@ import authRoutes from './routes/auth.js';
 import User from './models/userModel.js';
 
 const MONGODB_URI =
-	'mongodb+srv://Kato:mwg8cRLzcxAJ3a5P@katomarketcluster.bix4dpj.mongodb.net/shop?retryWrites=true&w=majority&appName=KatoMarketCluster';
+	`mongodb+srv://Kato:${process.env.DATABASE_PASSWORD}@katomarketcluster.bix4dpj.mongodb.net/shop?retryWrites=true&w=majority&appName=KatoMarketCluster`;
 
 const MongoDBStore = ConnectMongoDBSession(session);
 

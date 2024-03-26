@@ -1,10 +1,10 @@
-import Product from '../models/productModel.js'
+import Product from '../models/productModel.js';
 
 export const getAddProduct = (req, res, next) => {
 	res.render('admin/editProduct', {
 		pageTitle: 'Add Product',
 		path: '/admin/add-product',
-		editing: false,
+		editing: false
 	});
 };
 
@@ -15,7 +15,13 @@ export const postAddProduct = async (req, res, next) => {
 		const imageUrl = req.body.imageUrl;
 		const description = req.body.description;
 
-		const product = new Product({title, price, imageUrl, description, userId: req.user});
+		const product = new Product({
+			title,
+			price,
+			imageUrl,
+			description,
+			userId: req.user
+		});
 		await product.save();
 		res.redirect('/admin/products');
 	} catch (error) {
@@ -39,8 +45,7 @@ export const getEditProduct = async (req, res, next) => {
 			pageTitle: 'Edit Product',
 			path: '/admin/edit-product',
 			editing: editMode,
-			product: product,
-			
+			product: product
 		});
 	} catch (error) {
 		console.log(error);
@@ -49,18 +54,27 @@ export const getEditProduct = async (req, res, next) => {
 
 export const postEditProduct = async (req, res, next) => {
 	try {
-		const prodId = req.body.productId;
-		const updatedTitle = req.body.title;
-		const updatedPrice = req.body.price;
-		const updatedDescription = req.body.description;
-		const updatedImageUrl = req.body.imageUrl;
+		const {
+			productId,
+			title,
+			price,
+			description,
+			imageUrl
+		} = req.body;
+  
+		const result = await Product.updateOne(
+			{ _id: productId, userId: req.user._id },
+			{
+				title,
+				price,
+				description,
+				imageUrl
+			}
+		);
+		if (result.matchedCount === 0) {
+			return res.redirect('/');
+		}
 
-		await Product.updateOne({_id: prodId}, {
-			title: updatedTitle,
-			price: updatedPrice,
-			description: updatedDescription,
-			imageUrl: updatedImageUrl 
-		});
 		res.redirect('/admin/products');
 	} catch (error) {
 		console.log(error);
@@ -70,13 +84,13 @@ export const postEditProduct = async (req, res, next) => {
 export const getAdminProducts = async (req, res, next) => {
 	try {
 		// you can also use useful methods after 'find': Product.find().select('title price -_id').populate('userId', 'name')
-		const products = await Product.find();
+		const products = await Product.find({ userId: req.user._id });
 		// console.log(products);
+
 		res.render('admin/adminProducts', {
 			pageTitle: 'Admin Products',
 			path: '/admin/products',
-			products,
-			
+			products
 		});
 	} catch (error) {
 		console.log(error);
@@ -90,10 +104,9 @@ export const postDeleteProduct = async (req, res, next) => {
 		if (!prodId) {
 			throw new Error('Cannot find product ID');
 		}
-		await Product.findByIdAndDelete(prodId);
+		await Product.deleteOne({_id: prodId, userId: req.user._id});
 		res.redirect('/admin/products');
 	} catch (error) {
 		console.log(error);
 	}
 };
-
