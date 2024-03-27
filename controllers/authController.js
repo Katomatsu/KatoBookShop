@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 import { config } from 'dotenv';
 config();
 import crypto from 'crypto';
-import { read } from 'fs';
+import { validationResult } from 'express-validator';
 
 const transporter = nodemailer.createTransport({
 	service: 'gmail',
@@ -20,18 +20,38 @@ export const getLogin = (req, res, next) => {
 	res.render('auth/login', {
 		pageTitle: 'Login',
 		path: '/login',
-		errorMessage: message
+		errorMessage: message,
+		oldInput: { email: '', password: '' },
+		validationErrors: []
 	});
 };
 
 export const postLogin = async (req, res, next) => {
 	try {
 		const { email, password } = req.body;
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+      console.log(errors.array());
+			return res.status(422).render('auth/login', {
+				pageTitle: 'Login',
+				path: '/login',
+				errorMessage: errors.array()[0].msg,
+				oldInput: { email, password },
+				validationErrors: errors.array()
+			});
+		}
+
 		const user = await User.findOne({ email });
 		if (!user) {
-			req.flash('error', 'Invalid Email or Password');
-			return res.redirect('/login');
+			return res.status(422).render('auth/login', {
+				pageTitle: 'Login',
+				path: '/login',
+				errorMessage: 'Invalid email or password.',
+				oldInput: { email, password },
+				validationErrors: []
+			});
 		}
+
 		const comparisonRes = await bcryptjs.compare(password, user.password);
 		if (comparisonRes) {
 			req.session.isLoggedIn = true;
@@ -41,8 +61,13 @@ export const postLogin = async (req, res, next) => {
 				res.redirect('/');
 			});
 		}
-		req.flash('error', 'Invalid Email or Password');
-		res.redirect('/login');
+		return res.status(422).render('auth/login', {
+			pageTitle: 'Login',
+			path: '/login',
+			errorMessage: 'Invalid email or password.',
+			oldInput: { email, password },
+			validationErrors: []
+		});
 	} catch (error) {
 		console.log(error);
 	}
@@ -54,41 +79,43 @@ export const getSignup = (req, res, next) => {
 	res.render('auth/signup', {
 		pageTitle: 'Sign Up',
 		path: '/signup',
-		errorMessage: message
+		errorMessage: message,
+		oldInput: { name: '', email: '', password: '', confirmPassword: '' },
+		validationErrors: []
 	});
 };
 
 export const postSignup = async (req, res, next) => {
 	try {
 		const { name, email, password, confirmPassword } = req.body;
-		if (name && email && password && confirmPassword) {
-			const existingUser = await User.findOne({ email });
-			if (existingUser) {
-				req.flash(
-					'error',
-					'This email address is already in use. Please pick a different one'
-				);
-				return res.redirect('/signup');
-			}
-			const hashedPassword = await bcryptjs.hash(password, 12);
-			const user = new User({
-				name,
-				password: hashedPassword,
-				email,
-				cart: { items: [] }
-			});
-			await user.save();
-			res.redirect('/login');
-
-			await transporter.sendMail({
-				to: email,
-				from: '"KatoMarket" adogairbekov@gmail.com',
-				subject: 'Sign up succeeded!',
-				html: `<h1>Hello ${name}. You successfully signed up!</h1>`
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			console.log(errors.array());
+			return res.status(422).render('auth/signup', {
+				pageTitle: 'Sign Up',
+				path: '/signup',
+				errorMessage: errors.array()[0].msg,
+				oldInput: { name, email, password, confirmPassword },
+				validationErrors: errors.array()
 			});
 		}
-		req.flash('error', 'Please ensure that the entered data is valid.');
-		res.redirect('/signup');
+
+		const hashedPassword = await bcryptjs.hash(password, 12);
+		const user = new User({
+			name,
+			password: hashedPassword,
+			email,
+			cart: { items: [] }
+		});
+		await user.save();
+		res.redirect('/login');
+
+		await transporter.sendMail({
+			to: email,
+			from: '"KatoMarket" adogairbekov@gmail.com',
+			subject: 'Sign up succeeded!',
+			html: `<h1>Hello ${name}. You successfully signed up!</h1>`
+		});
 	} catch (error) {
 		console.log(error);
 	}
@@ -137,7 +164,7 @@ export const postReset = (req, res, next) => {
 				subject: 'Password Reset!',
 				html: `
           <p>You requested a password reset</p>
-          <p>Click this <a href='http://localhost:8888/reset/${token}'>link</a> to set a new password</p>
+          <p>Click this <a href='http://localhost:8888/reset/${token}'>Link</a> to set a new password</p>
         `
 			});
 		});
@@ -150,14 +177,13 @@ export const getNewPassword = async (req, res, next) => {
 	try {
 		const { token } = req.params;
 		const user = await User.findOne({
-			resetToken: token,
-			resetTokenExpiration: { $gt: Date.now() }
+			resetToken: token
 		}); // $gt means: greater than
 
 		if (user) {
 			const errorMessages = req.flash('error');
 			const message = errorMessages.length > 0 ? errorMessages[0] : null;
-			res.render('auth/newPassword', {
+			return res.render('auth/newPassword', {
 				pageTitle: 'New Password',
 				path: '/reset',
 				errorMessage: message,
@@ -165,6 +191,8 @@ export const getNewPassword = async (req, res, next) => {
 				passwordToken: token
 			});
 		}
+		req.flash('error', 'The token is incorrect');
+		res.redirect('/reset');
 	} catch (error) {
 		console.log(error);
 	}
@@ -178,10 +206,10 @@ export const postNewPassword = async (req, res, next) => {
 			resetToken: passwordToken,
 			resetTokenExpiration: { $gt: Date.now() }
 		});
-    if (!user) {
-      req.flash('error', 'The token has expired')
-      return res.redirect(`/reset/${passwordToken}`)
-    }
+		if (!user) {
+			req.flash('error', 'The token has expired');
+			return res.redirect(`/reset/${passwordToken}`);
+		}
 		const hashedPassword = await bcryptjs.hash(password, 12);
 		user.password = hashedPassword;
 		user.resetToken = undefined;
