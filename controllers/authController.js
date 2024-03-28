@@ -5,6 +5,7 @@ import { config } from 'dotenv';
 config();
 import crypto from 'crypto';
 import { validationResult } from 'express-validator';
+import throwTechError from '../util/throwTechError.js';
 
 const transporter = nodemailer.createTransport({
 	service: 'gmail',
@@ -31,7 +32,7 @@ export const postLogin = async (req, res, next) => {
 		const { email, password } = req.body;
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
-      console.log(errors.array());
+			console.log(errors.array());
 			return res.status(422).render('auth/login', {
 				pageTitle: 'Login',
 				path: '/login',
@@ -69,7 +70,7 @@ export const postLogin = async (req, res, next) => {
 			validationErrors: []
 		});
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -117,7 +118,7 @@ export const postSignup = async (req, res, next) => {
 			html: `<h1>Hello ${name}. You successfully signed up!</h1>`
 		});
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -169,7 +170,7 @@ export const postReset = (req, res, next) => {
 			});
 		});
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -194,7 +195,8 @@ export const getNewPassword = async (req, res, next) => {
 		req.flash('error', 'The token is incorrect');
 		res.redirect('/reset');
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
+		throwTechError(error, next);
 	}
 };
 
@@ -217,6 +219,6 @@ export const postNewPassword = async (req, res, next) => {
 		await user.save();
 		res.redirect('/login');
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };

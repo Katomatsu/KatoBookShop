@@ -1,5 +1,7 @@
 import { validationResult } from 'express-validator';
+import throwTechError from '../util/throwTechError.js';
 import Product from '../models/productModel.js';
+import mongoose from 'mongoose';
 
 export const getAddProduct = (req, res, next) => {
 	res.render('admin/editProduct', {
@@ -13,22 +15,22 @@ export const getAddProduct = (req, res, next) => {
 };
 
 export const postAddProduct = async (req, res, next) => {
-	try {
-		const { title, price, imageUrl, description } = req.body;
-		const errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			console.log(errors.array());
-			return res.status(422).render('admin/editProduct', {
-				pageTitle: 'Add Product',
-				path: '/admin/add-product',
-				editing: false,
-				hasError: true,
-				errorMessage: errors.array()[0].msg,
-				product: { title, price, imageUrl, description },
-				validationErrors: errors.array()
-			});
-		}
+	const { title, price, imageUrl, description } = req.body;
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		console.log(errors.array());
+		return res.status(422).render('admin/editProduct', {
+			pageTitle: 'Add Product',
+			path: '/admin/add-product',
+			editing: false,
+			hasError: true,
+			errorMessage: errors.array()[0].msg,
+			product: { title, price, imageUrl, description },
+			validationErrors: errors.array()
+		});
+	}
 
+	try {
 		const product = new Product({
 			title,
 			price,
@@ -40,17 +42,17 @@ export const postAddProduct = async (req, res, next) => {
 		res.redirect('/admin/products');
 	} catch (error) {
 		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
 export const getEditProduct = async (req, res, next) => {
+	const editMode = req.query.edit;
+	const prodId = req.params.productId;
+	if (!editMode) {
+		return res.redirect('/');
+	}
 	try {
-		const editMode = req.query.edit;
-		const prodId = req.params.productId;
-		if (!editMode) {
-			return res.redirect('/');
-		}
-
 		const product = await Product.findById(prodId);
 		if (!product) {
 			return res.redirect('/');
@@ -65,7 +67,7 @@ export const getEditProduct = async (req, res, next) => {
 			validationErrors: []
 		});
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -82,7 +84,7 @@ export const postEditProduct = async (req, res, next) => {
 				hasError: true,
 				errorMessage: errors.array()[0].msg,
 				validationErrors: errors.array(),
-        product: {title, price, imageUrl, description, _id: productId}
+				product: { title, price, imageUrl, description, _id: productId }
 			});
 		}
 
@@ -101,7 +103,7 @@ export const postEditProduct = async (req, res, next) => {
 
 		res.redirect('/admin/products');
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -117,7 +119,7 @@ export const getAdminProducts = async (req, res, next) => {
 			products
 		});
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -131,6 +133,6 @@ export const postDeleteProduct = async (req, res, next) => {
 		await Product.deleteOne({ _id: prodId, userId: req.user._id });
 		res.redirect('/admin/products');
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };

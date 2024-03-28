@@ -1,5 +1,6 @@
 import Product from '../models/productModel.js';
-import Order from '../models/orderModel.js'; 
+import Order from '../models/orderModel.js';
+import throwTechError from '../util/throwTechError.js';
 
 export const getIndex = async (req, res, next) => {
 	try {
@@ -10,7 +11,7 @@ export const getIndex = async (req, res, next) => {
 			path: '/'
 		});
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -20,10 +21,10 @@ export const getProducts = async (req, res, next) => {
 		res.render('shop/productsList', {
 			pageTitle: 'All Products',
 			products: products,
-			path: '/'
+			path: '/products'
 		});
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -37,7 +38,7 @@ export const getProduct = async (req, res, next) => {
 			product: product
 		});
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -53,7 +54,7 @@ export const getCart = async (req, res, next) => {
 			totalPrice: 0 /* cart.totalPrice */
 		});
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -65,7 +66,7 @@ export const postCart = async (req, res, next) => {
 		await req.user.addToCart(product);
 		res.redirect('/cart');
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -75,7 +76,7 @@ export const postDeleteCart = async (req, res, next) => {
 		await req.user.deleteCartItem(prodId);
 		res.redirect('/cart');
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -88,7 +89,7 @@ export const getOrders = async (req, res, next) => {
 			orders: orders
 		});
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };
 
@@ -105,7 +106,7 @@ export const postOrder = async (req, res, next) => {
 			products,
 			user: {
 				name: req.user.name,
-        email: req.user.email,
+				email: req.user.email,
 				userId: req.user
 			}
 		});
@@ -113,6 +114,6 @@ export const postOrder = async (req, res, next) => {
 		await req.user.clearCart();
 		res.redirect('/orders');
 	} catch (error) {
-		console.log(error);
+		throwTechError(error, next);
 	}
 };

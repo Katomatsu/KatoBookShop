@@ -5,16 +5,16 @@ const userSchema = new Schema({
 		type: String,
 		required: true
 	},
-  password: {
-    type: String,
+	password: {
+		type: String,
 		required: true
-  },
+	},
 	email: {
 		type: String,
 		required: true
 	},
-  resetToken: String,
-  resetTokenExpiration: Date,
+	resetToken: String,
+	resetTokenExpiration: Date,
 	cart: {
 		items: [
 			{
@@ -71,10 +71,14 @@ userSchema.methods.deleteCartItem = async function (productId) {
 	}
 };
 
-userSchema.methods.clearCart = async function() {
-  this.cart = {items: []}
-  this.save()
-}
+userSchema.methods.clearCart = async function () {
+	try {
+		this.cart = { items: [] };
+		await this.save();
+	} catch (error) {
+		console.log(error);
+	}
+};
 
 const UserModel = model('User', userSchema);
 
