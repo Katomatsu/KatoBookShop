@@ -6,6 +6,7 @@ import { csrfSync } from 'csrf-sync';
 import flash from 'connect-flash';
 import { config } from 'dotenv';
 config();
+import multer from 'multer';
 
 import { get404, get500 } from './controllers/errorController.js';
 import adminRoutes from './routes/admin.js';
@@ -15,7 +16,6 @@ import User from './models/userModel.js';
 import throwTechError from './util/throwTechError.js';
 
 const MONGODB_URI = `mongodb+srv://Kato:${process.env.DATABASE_PASSWORD}@katomarketcluster.bix4dpj.mongodb.net/shop?retryWrites=true&w=majority&appName=KatoMarketCluster`;
-
 const MongoDBStore = ConnectMongoDBSession(session);
 
 const app = express();
@@ -30,10 +30,35 @@ const { csrfSynchronisedProtection } = csrfSync({
 	}
 });
 
+const fileStorage = multer.diskStorage({
+	destination: (req, file, cb) => {
+		cb(null, './images');
+	},
+	filename: (req, file, cb) => {
+		cb(null, `${new Date().getTime().toString()}-${file.originalname}`);
+	}
+});
+
+const fileFilter = (req, file, cb) => {
+	if (file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg') {
+		cb(null, true);
+	} else {
+		cb(null, false);
+	}
+};
+
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 app.use(express.urlencoded({ extended: false }));
+app.use(
+	multer({
+		dest: './images',
+		storage: fileStorage,
+		fileFilter: fileFilter
+	}).single('image')
+);
 app.use(express.static('./public'));
+app.use(express.static('./images'));
 app.use(
 	session({
 		secret: 'my secret',
@@ -53,12 +78,12 @@ app.use((req, res, next) => {
 });
 
 app.use(async (req, res, next) => {
-  try {
-    if (!req.session.user) {
-      return next();
+	try {
+		if (!req.session.user) {
+			return next();
 		}
 		// findById here return full mongoose model with all methods and so on.
-		const user = await User.findById(req.session.user._id)
+		const user = await User.findById(req.session.user._id);
 		// Because of that you don't need to instantiate it with new User() on that line =>
 		if (!user) {
 			return next();
@@ -66,11 +91,9 @@ app.use(async (req, res, next) => {
 		req.user = user;
 		next();
 	} catch (error) {
-		throwTechError(error, next)
+		throwTechError(error, next);
 	}
 });
-
-
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
@@ -79,10 +102,11 @@ app.use(authRoutes);
 app.get('/500', get500);
 app.use(get404);
 app.use((error, req, res, next) => {
+	console.log('108', error);
 	res.status(500).render('500', {
-    pageTitle: 'Internal Server Error!',
-    path: '/500'
-  })
+		pageTitle: 'Internal Server Error!',
+		path: '/500'
+	});
 });
 
 const mongooseConnection = async () => {

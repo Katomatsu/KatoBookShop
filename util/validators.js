@@ -45,7 +45,7 @@ export const signupValidator = [
 
 export const addProductValidator = [
 	body('title', 'Invalid Title').isLength({ min: 3 }).isString().trim(),
-	body('imageUrl', 'Invalid Image URL').isURL(),
+	// body('imageUrl', 'Invalid Image URL').isURL(),
 	body('price', 'Invalid Price').isFloat(),
 	body('description', 'Invalid description').isLength({ min: 5 }).trim()
 ];
