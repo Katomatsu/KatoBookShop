@@ -5,14 +5,27 @@ import fs from 'fs';
 import path from 'path';
 import PDFDocument from 'pdfkit';
 
+const ITEMS_PER_PAGE = 9;
+
 export const getIndex = async (req, res, next) => {
 	try {
-		const { page } = req.query;
-		const products = await Product.find();
+		const page = +req.query.page || 1;
+		const productsCount = await Product.find().countDocuments();
+
+		const products = await Product.find()
+			.skip((page - 1) * ITEMS_PER_PAGE)
+			.limit(ITEMS_PER_PAGE);
+
 		res.render('shop/index', {
 			pageTitle: 'All Products',
 			products: products,
-			path: '/'
+			path: '/',
+			currentPage: page,
+			hasNextPage: ITEMS_PER_PAGE * page < productsCount,
+			hasPrevPage: page > 1,
+			nextPage: page + 1,
+			prevPage: page - 1,
+			lastPage: Math.ceil(productsCount / ITEMS_PER_PAGE)
 		});
 	} catch (error) {
 		throwTechError(error, next);
@@ -21,11 +34,21 @@ export const getIndex = async (req, res, next) => {
 
 export const getProducts = async (req, res, next) => {
 	try {
-		const products = await Product.find();
+		const page = +req.query.page || 1;
+		const productsCount = await Product.find().countDocuments();
+		const products = await Product.find()
+			.skip((page - 1) * ITEMS_PER_PAGE)
+			.limit(ITEMS_PER_PAGE);
 		res.render('shop/productsList', {
 			pageTitle: 'All Products',
 			products: products,
-			path: '/products'
+			path: '/products',
+			currentPage: page,
+			hasNextPage: ITEMS_PER_PAGE * page < productsCount,
+			hasPrevPage: page > 1,
+			nextPage: page + 1,
+			prevPage: page - 1,
+			lastPage: Math.ceil(productsCount / ITEMS_PER_PAGE)
 		});
 	} catch (error) {
 		throwTechError(error, next);
