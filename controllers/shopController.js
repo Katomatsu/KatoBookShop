@@ -3,9 +3,13 @@ import Order from '../models/orderModel.js';
 import throwTechError from '../util/throwTechError.js';
 import fs from 'fs';
 import path from 'path';
+import { config } from 'dotenv';
+config();
 import PDFDocument from 'pdfkit';
-
+import { Stripe } from 'stripe';
 const ITEMS_PER_PAGE = 9;
+
+const stripe = new Stripe(process.env.STRIPE_API_KEY);
 
 export const getIndex = async (req, res, next) => {
 	try {
@@ -77,8 +81,7 @@ export const getCart = async (req, res, next) => {
 		res.render('shop/cart', {
 			pageTitle: 'Your Cart',
 			path: '/cart',
-			products: products,
-			totalPrice: 0 /* cart.totalPrice */
+			products: products
 		});
 	} catch (error) {
 		throwTechError(error, next);
@@ -105,6 +108,42 @@ export const postDeleteCart = async (req, res, next) => {
 	} catch (error) {
 		throwTechError(error, next);
 	}
+};
+
+export const getCheckout = async (req, res, next) => {
+	const user = await req.user.populate('cart.items.productId');
+	const products = user.cart.items;
+	const total = products.reduce((acc, curr) => {
+		return acc + curr.productId.price * curr.quantity;
+	}, 0);
+
+	const session = await stripe.checkout.sessions.create({
+		payment_method_types: ['card'],
+		line_items: products.map(p => {
+			return {
+				price_data: {
+					currency: 'usd',
+					unit_amount: parseInt(Math.ceil(p.productId.price * 100)),
+					product_data: {
+						name: p.productId.title,
+						description: p.productId.description
+					}
+				},
+				quantity: p.quantity
+			};
+		}),
+		mode: 'payment',
+		success_url: `${req.protocol}://${req.get('host')}/checkout/success`, // ${req.protocol}://${req.get('host')} => http://localhost:8888
+		cancel_url: `${req.protocol}://${req.get('host')}/checkout/cancel`
+	});
+
+	res.render('shop/checkout', {
+		pageTitle: 'Checkout',
+		path: '/checkout',
+		products,
+		totalSum: total,
+		sessionId: session.id
+	});
 };
 
 export const getOrders = async (req, res, next) => {

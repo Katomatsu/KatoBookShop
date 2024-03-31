@@ -7,8 +7,9 @@ import {
 	postCart,
 	postDeleteCart,
 	getOrders,
-  getInvoice,
-	postOrder
+	getInvoice,
+	postOrder,
+	getCheckout
 } from '../controllers/shopController.js';
 import isAuth from '../middleware/isAuth.js';
 
@@ -20,8 +21,10 @@ shopRouter.get('/products', getProducts);
 shopRouter.get('/cart', isAuth, getCart);
 shopRouter.get('/orders/:orderId', isAuth, getInvoice)
 shopRouter.get('/orders', isAuth, getOrders);
+shopRouter.get('/checkout/success', isAuth, postOrder);
+shopRouter.get('/checkout/cancel', isAuth, getCheckout);
+shopRouter.get('/checkout', isAuth, getCheckout)
 shopRouter.post('/cart', isAuth, postCart);
 shopRouter.post('/cart-delete-item', isAuth, postDeleteCart);
-shopRouter.post('/create-order', isAuth, postOrder);
 
 export default shopRouter;

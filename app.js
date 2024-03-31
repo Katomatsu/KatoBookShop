@@ -26,11 +26,10 @@ const store = new MongoDBStore({
 
 const { csrfSynchronisedProtection } = csrfSync({
 	getTokenFromRequest: req => {
-		if (req.is('multipart')) {
-			return req.body['CSRFToken'];
+		if (req.headers['x-csrf-token']) {
+			return req.headers['x-csrf-token'];
 		}
-		// Otherwise use the header for all other request types
-		return req.headers['x-csrf-token'];
+		return req.body['CSRFToken'];
 	}
 });
 

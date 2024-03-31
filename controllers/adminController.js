@@ -106,14 +106,14 @@ export const postEditProduct = async (req, res, next) => {
 		product.title = title;
 		product.price = price;
 		product.description = description;
-    if (!product) {
-      return res.redirect('/');
-    }
+		if (!product) {
+			return res.redirect('/');
+		}
 		if (image) {
-      deleteFile(`images/${product.imageUrl}`);
+			deleteFile(`images/${product.imageUrl}`);
 			product.imageUrl = image.filename;
 		}
-    await product.save()
+		await product.save();
 		res.redirect('/admin/products');
 	} catch (error) {
 		throwTechError(error, next);
@@ -136,7 +136,6 @@ export const getAdminProducts = async (req, res, next) => {
 	}
 };
 
-// don't forget to remove product also from cart!!!!
 export const deleteProduct = async (req, res, next) => {
 	try {
 		const prodId = req.params.productId;
@@ -145,9 +144,10 @@ export const deleteProduct = async (req, res, next) => {
 			return next(new Error('Product not found'));
 		}
 		deleteFile(`images/${product.imageUrl}`);
+		req.user.deleteCartItem(prodId);
 		await Product.deleteOne({ _id: prodId, userId: req.user._id });
-		res.status(200).json({message: 'Success!'});
+		res.status(200).json({ message: 'Success!' });
 	} catch (error) {
-		res.status(500).json({message: 'Deleting product failed.'})
+		res.status(500).json({ message: 'Deleting product failed.' });
 	}
 };
