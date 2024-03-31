@@ -5,7 +5,7 @@ import {
 	getAdminProducts,
 	getEditProduct,
 	postEditProduct,
-	postDeleteProduct
+	deleteProduct
 } from '../controllers/adminController.js';
 import isAuth from '../middleware/isAuth.js';
 import { addProductValidator } from '../util/validators.js';
@@ -17,6 +17,7 @@ adminRouter.get('/products', isAuth, getAdminProducts);
 adminRouter.get('/edit-product/:productId', isAuth, getEditProduct);
 adminRouter.post('/edit-product', isAuth, addProductValidator, postEditProduct);
 adminRouter.post('/add-product', isAuth, addProductValidator, postAddProduct);
-adminRouter.post('/delete-product', isAuth, postDeleteProduct);
+adminRouter.delete('/product/:productId', isAuth, deleteProduct);
 
 export default adminRouter;
+

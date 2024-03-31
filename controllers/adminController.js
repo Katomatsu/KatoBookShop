@@ -137,17 +137,17 @@ export const getAdminProducts = async (req, res, next) => {
 };
 
 // don't forget to remove product also from cart!!!!
-export const postDeleteProduct = async (req, res, next) => {
+export const deleteProduct = async (req, res, next) => {
 	try {
-		const prodId = req.body.id;
+		const prodId = req.params.productId;
 		const product = await Product.findById(prodId);
 		if (!product) {
 			return next(new Error('Product not found'));
 		}
 		deleteFile(`images/${product.imageUrl}`);
 		await Product.deleteOne({ _id: prodId, userId: req.user._id });
-		res.redirect('/admin/products');
+		res.status(200).json({message: 'Success!'});
 	} catch (error) {
-		throwTechError(error, next);
+		res.status(500).json({message: 'Deleting product failed.'})
 	}
 };

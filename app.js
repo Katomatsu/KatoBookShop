@@ -26,7 +26,11 @@ const store = new MongoDBStore({
 
 const { csrfSynchronisedProtection } = csrfSync({
 	getTokenFromRequest: req => {
-		return req.body._csrf;
+		if (req.is('multipart')) {
+			return req.body['CSRFToken'];
+		}
+		// Otherwise use the header for all other request types
+		return req.headers['x-csrf-token'];
 	}
 });
 
@@ -40,7 +44,11 @@ const fileStorage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-	if (file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg') {
+	if (
+		file.mimetype === 'image/png' ||
+		file.mimetype === 'image/jpg' ||
+		file.mimetype === 'image/jpeg'
+	) {
 		cb(null, true);
 	} else {
 		cb(null, false);
